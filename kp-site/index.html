@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>雾中献血车 KP 舞台</title>
+    <link rel="stylesheet" href="styles.css?v=20260617a" />
+  </head>
+  <body>
+    <div class="stage-app">
+      <aside class="control-panel" aria-label="KP 控制栏">
+        <header class="brand">
+          <div class="brand-mark">R-13</div>
+          <div>
+            <h1>雾中献血车</h1>
+            <p>KP 舞台控制台</p>
+          </div>
+        </header>
+
+        <section class="selector-group">
+          <div class="group-title">
+            <span>地点</span>
+            <strong id="locationCount">0</strong>
+          </div>
+          <div id="locationList" class="selector-list"></div>
+        </section>
+
+        <section class="selector-group">
+          <div class="group-title">
+            <span>NPC</span>
+            <button id="clearNpc" class="mini-btn" type="button">清空</button>
+          </div>
+          <div id="npcList" class="selector-list"></div>
+        </section>
+
+        <section class="selector-group">
+          <div class="group-title">
+            <span>素材</span>
+            <div class="title-actions">
+              <strong id="materialCount">0</strong>
+              <button id="clearMaterial" class="mini-btn" type="button">清空</button>
+            </div>
+          </div>
+          <div id="materialList" class="selector-list"></div>
+        </section>
+
+        <section class="selector-group">
+          <div class="group-title">
+            <span>玩家</span>
+            <button id="clearPlayers" class="mini-btn" type="button">清空</button>
+          </div>
+          <div id="playerList" class="selector-list"></div>
+        </section>
+
+        <footer class="panel-tools">
+          <button id="toggleNotes" class="panel-btn" type="button">显示 KP 备注</button>
+          <button id="resetStage" class="panel-btn" type="button">重置舞台</button>
+        </footer>
+      </aside>
+
+      <main class="stage" aria-live="polite">
+        <img id="backgroundImage" class="background-image" src="../assets/locations/oxford-campus-bg.png" alt="" />
+        <div class="stage-vignette"></div>
+        <div class="stage-grain"></div>
+
+        <section class="npc-side" aria-label="NPC 出场区">
+          <div id="npcPortrait" class="npc-portrait"></div>
+        </section>
+
+        <section class="material-layer" aria-label="素材展示区">
+          <div id="materialDisplay" class="material-display"></div>
+        </section>
+
+        <section class="player-side" aria-label="玩家出场区">
+          <div id="playerPortraits" class="player-portraits"></div>
+        </section>
+
+        <section id="notesPanel" class="notes-panel hidden">
+          <div class="notes-head">
+            <h3 id="notesTitle">校园献血点</h3>
+            <span id="notesClock">19:10</span>
+          </div>
+          <p id="notesGoal"></p>
+          <div class="notes-grid">
+            <div>
+              <h4>读白</h4>
+              <p id="notesRead"></p>
+            </div>
+            <div>
+              <h4>场景要点</h4>
+              <ul id="notesBeats"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js?v=20260617a"></script>
+  </body>
+</html>

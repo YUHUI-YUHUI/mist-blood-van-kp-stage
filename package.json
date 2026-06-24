@@ -1,0 +1,13 @@
+{
+  "name": "coc-kp-room-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check platform.js && node --check kp-site/app.js && node --check player/player.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

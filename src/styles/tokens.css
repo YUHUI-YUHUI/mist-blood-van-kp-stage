@@ -1,0 +1,9 @@
+:root {
+  color-scheme: dark;
+  --paper: #f0eee7;
+  --muted: rgba(240, 238, 231, 0.62);
+  --line: rgba(240, 238, 231, 0.18);
+  --gold: #d8b168;
+  --night: #071114;
+  --panel: rgba(10, 24, 27, 0.78);
+}

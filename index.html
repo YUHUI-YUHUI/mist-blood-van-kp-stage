@@ -5,51 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#071114" />
     <title>秘仪室 · COC 在线舞台</title>
-    <link rel="stylesheet" href="platform.css?v=20260622a" />
   </head>
   <body>
-    <main class="portal-shell">
-      <section class="portal-copy">
-        <a class="wordmark" href="/" aria-label="秘仪室首页">
-          <span class="wordmark-mark">R·13</span>
-          <span>秘仪室</span>
-        </a>
-        <div class="hero-copy">
-          <h1>把故事留在<br />同一个房间里。</h1>
-          <p>KP 控制场景与线索，玩家通过房间链接进入只读舞台。无需安装，打开浏览器即可入席。</p>
-        </div>
-        <div class="feature-line" aria-label="平台能力">
-          <span>实时场景</span>
-          <span>只读玩家端</span>
-          <span>为文字与语音预留</span>
-        </div>
-      </section>
-
-      <section class="room-panel" aria-labelledby="roomTitle">
-        <div class="room-panel-head">
-          <p>开始一场游戏</p>
-          <h2 id="roomTitle">进入房间</h2>
-        </div>
-
-        <button id="createRoom" class="primary-action" type="button">
-          <span>我是 KP，创建新房间</span>
-          <span aria-hidden="true">↗</span>
-        </button>
-
-        <div class="divider"><span>或使用房间号加入</span></div>
-
-        <form id="joinForm" class="join-form">
-          <label for="roomCode">玩家房间号</label>
-          <div class="code-row">
-            <input id="roomCode" name="room" maxlength="6" autocomplete="off" spellcheck="false" placeholder="例如 R13COC" required />
-            <button type="submit">进入舞台</button>
-          </div>
-          <p id="formMessage" class="form-message" role="status"></p>
-        </form>
-
-        <p class="privacy-note">玩家端不会显示 KP 控制栏、备注或房主密钥。</p>
-      </section>
-    </main>
-    <script src="platform.js?v=20260622a"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/pages/home/main.tsx"></script>
   </body>
 </html>

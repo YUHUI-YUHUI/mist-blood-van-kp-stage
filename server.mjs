@@ -272,14 +272,12 @@ async function handleApi(request, response, url) {
   return false;
 }
 
-async function serveStatic(response, pathname) {
-  const requested = pathname === "/" ? "/index.html" : pathname;
-  const safePath = normalize(decodeURIComponent(requested)).replace(/^(\.\.(\/|\\|$))+/, "");
-  let filePath = join(root, safePath);
-  if (!filePath.startsWith(root)) {
-    response.writeHead(403).end("Forbidden");
-    return;
-  }
+const distRoot = join(root, "dist");
+
+// 在指定根目录下尝试提供静态文件；命中并写出响应时返回 true。
+async function tryServeFrom(response, baseDir, safePath) {
+  let filePath = join(baseDir, safePath);
+  if (!filePath.startsWith(baseDir)) return false;
   try {
     const info = await stat(filePath);
     if (info.isDirectory()) filePath = join(filePath, "index.html");
@@ -289,10 +287,20 @@ async function serveStatic(response, pathname) {
       "cache-control": extname(filePath) === ".html" ? "no-cache" : "public, max-age=3600"
     });
     response.end(content);
+    return true;
   } catch {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    response.end("页面不存在");
+    return false;
   }
+}
+
+// 优先提供 Vite 构建产物（dist/），未迁移的页面与模组资源回退到项目根目录。
+async function serveStatic(response, pathname) {
+  const requested = pathname === "/" ? "/index.html" : pathname;
+  const safePath = normalize(decodeURIComponent(requested)).replace(/^(\.\.(\/|\\|$))+/, "");
+  if (await tryServeFrom(response, distRoot, safePath)) return;
+  if (await tryServeFrom(response, root, safePath)) return;
+  response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+  response.end("页面不存在");
 }
 
 const server = createServer((request, response) => {

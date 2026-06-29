@@ -5,33 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#071114" />
     <title>玩家舞台 · 秘仪室</title>
-    <link rel="stylesheet" href="../kp-site/styles.css?v=20260622b" />
-    <link rel="stylesheet" href="player.css?v=20260622b" />
   </head>
   <body>
-    <main class="stage player-stage" aria-live="polite">
-      <img id="backgroundImage" class="background-image" src="../assets/locations/oxford-campus-bg.png" alt="" />
-      <div class="stage-vignette"></div>
-      <div class="stage-grain"></div>
-
-      <section class="npc-side" aria-label="NPC 出场区">
-        <div id="npcPortrait" class="npc-portrait"></div>
-      </section>
-
-      <section class="material-layer" aria-label="线索展示区">
-        <div id="materialDisplay" class="material-display"></div>
-      </section>
-
-      <div class="room-indicator">
-        <span id="connectionDot" class="connection-dot"></span>
-        <span id="roomLabel">连接房间</span>
-      </div>
-
-      <section id="joinError" class="join-error hidden">
-        <p id="joinErrorText">无法连接房间</p>
-        <a href="/">返回平台首页</a>
-      </section>
-    </main>
-    <script src="player.js?v=20260622b"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/pages/player/main.tsx"></script>
   </body>
 </html>

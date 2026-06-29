@@ -1,12 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createRoom, getRoomState } from "@shared/api";
-
-function normalizeRoom(value: string): string {
-  return value
-    .toUpperCase()
-    .replace(/[^A-Z2-9]/g, "")
-    .slice(0, 6);
-}
+import { normalizeRoomCode } from "@shared/room/state";
 
 export default function App() {
   const [roomCode, setRoomCode] = useState("");
@@ -28,7 +22,7 @@ export default function App() {
 
   async function handleJoin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const code = normalizeRoom(roomCode);
+    const code = normalizeRoomCode(roomCode);
     if (code.length !== 6) {
       setMessage("请输入 6 位房间号。");
       return;
@@ -98,7 +92,7 @@ export default function App() {
               required
               value={roomCode}
               onChange={(event) => {
-                setRoomCode(normalizeRoom(event.target.value));
+                setRoomCode(normalizeRoomCode(event.target.value));
                 setMessage("");
               }}
             />

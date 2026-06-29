@@ -26,7 +26,7 @@ export default defineConfig({
       input: {
         home: resolve(root, "index.html"),
         // kp: resolve(root, "kp-site/index.html"),      // 阶段 D：迁移 KP 页时启用
-        // player: resolve(root, "player/index.html"),   // 阶段 C：迁移玩家页时启用
+        player: resolve(root, "player/index.html"),
       },
     },
   },

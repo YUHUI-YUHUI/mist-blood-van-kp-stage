@@ -92,43 +92,43 @@
 
 ### A-1 依赖与工程配置
 
-- [ ] 在 `package.json` 中引入 `vite`、`react`、`react-dom`、`typescript`
-- [ ] 引入 React 所需类型依赖
-- [ ] 增加开发脚本：`dev`、`build`、`preview`
-- [ ] 保留现有 `start`，用于 Node 服务启动
-- [ ] 保留或升级 `check`，增加 TypeScript 检查入口
+- [x] 在 `package.json` 中引入 `vite`、`react`、`react-dom`、`typescript`
+- [x] 引入 React 所需类型依赖
+- [x] 增加开发脚本：`dev`、`build`、`preview`
+- [x] 保留现有 `start`，用于 Node 服务启动
+- [x] 保留或升级 `check`，增加 TypeScript 检查入口
 
 ### A-2 TypeScript 基础配置
 
-- [ ] 新建 `tsconfig.json`
-- [ ] 新建前端用 `tsconfig.app.json` 或等价配置
-- [ ] 配置 JSX、模块解析、路径别名
-- [ ] 确认 Node 服务端与前端 TS 配置不会互相污染
+- [x] 新建 `tsconfig.json`
+- [x] 新建前端用 `tsconfig.app.json` 或等价配置
+- [x] 配置 JSX、模块解析、路径别名
+- [x] 确认 Node 服务端与前端 TS 配置不会互相污染
 
 ### A-3 Vite 多页面配置
 
-- [ ] 新建 `vite.config.ts`
+- [x] 新建 `vite.config.ts`
 - [ ] 配置三个入口页面：`home`、`kp`、`player`
-- [ ] 配置产物路径与现有服务端静态路径兼容
+- [x] 配置产物路径与现有服务端静态路径兼容
 - [ ] 确认构建后可以继续映射到 `/`、`/kp-site/`、`/player/`
 
 ### A-4 目录初始化
 
-- [ ] 新建 `src/pages/home`
+- [x] 新建 `src/pages/home`
 - [ ] 新建 `src/pages/kp`
-- [ ] 新建 `src/pages/player`
-- [ ] 新建 `src/shared/api`
-- [ ] 新建 `src/shared/types`
-- [ ] 新建 `src/shared/room`
-- [ ] 新建 `src/shared/stage`
-- [ ] 新建 `src/styles`
+- [x] 新建 `src/pages/player`
+- [x] 新建 `src/shared/api`
+- [x] 新建 `src/shared/types`
+- [x] 新建 `src/shared/room`
+- [x] 新建 `src/shared/stage`
+- [x] 新建 `src/styles`
 
 ### A-5 基础共享模块
 
-- [ ] 建立 `RoomState` 等基础类型
-- [ ] 建立 API 调用封装
-- [ ] 建立基础房间状态归一化函数
-- [ ] 建立舞台基础展示组件骨架
+- [x] 建立 `RoomState` 等基础类型
+- [x] 建立 API 调用封装
+- [x] 建立基础房间状态归一化函数
+- [x] 建立舞台基础展示组件骨架
 
 ### 阶段 A 交付物
 
@@ -148,22 +148,22 @@
 
 ### B-1 结构迁移
 
-- [ ] 创建 `src/pages/home/App.tsx`
-- [ ] 创建 `src/pages/home/main.tsx`
-- [ ] 迁移首页静态结构
-- [ ] 保留当前视觉方向
+- [x] 创建 `src/pages/home/App.tsx`
+- [x] 创建 `src/pages/home/main.tsx`
+- [x] 迁移首页静态结构
+- [x] 保留当前视觉方向
 
 ### B-2 行为迁移
 
-- [ ] 迁移创建房间逻辑
-- [ ] 迁移加入房间逻辑
-- [ ] 迁移表单错误提示
-- [ ] 保持房间号输入规则一致
+- [x] 迁移创建房间逻辑
+- [x] 迁移加入房间逻辑
+- [x] 迁移表单错误提示
+- [x] 保持房间号输入规则一致
 
 ### B-3 样式迁移
 
-- [ ] 提取首页专属样式
-- [ ] 将可复用 token 抽到共享样式层
+- [x] 提取首页专属样式
+- [x] 将可复用 token 抽到共享样式层
 
 ### 阶段 B 交付物
 
@@ -180,23 +180,23 @@
 
 ### C-1 页面骨架
 
-- [ ] 创建 `src/pages/player/App.tsx`
-- [ ] 创建 `src/pages/player/main.tsx`
-- [ ] 迁移舞台基础布局
+- [x] 创建 `src/pages/player/App.tsx`
+- [x] 创建 `src/pages/player/main.tsx`
+- [x] 迁移舞台基础布局
 
 ### C-2 数据连接
 
-- [ ] 封装获取房间状态逻辑
-- [ ] 封装 SSE 订阅逻辑
-- [ ] 封装断线重连状态表现
+- [x] 封装获取房间状态逻辑
+- [x] 封装 SSE 订阅逻辑
+- [x] 封装断线重连状态表现
 
 ### C-3 舞台渲染
 
-- [ ] 迁移背景图展示
-- [ ] 迁移 NPC 展示
-- [ ] 迁移素材展示
-- [ ] 迁移连接状态组件
-- [ ] 迁移错误态组件
+- [x] 迁移背景图展示
+- [x] 迁移 NPC 展示
+- [x] 迁移素材展示
+- [x] 迁移连接状态组件
+- [x] 迁移错误态组件
 
 ### 阶段 C 交付物
 

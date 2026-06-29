@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "start": "node server.mjs",
     "serve": "npm run build && node server.mjs",
-    "check": "tsc -b && node --check server.mjs && node --check kp-site/app.js && node --check player/player.js"
+    "check": "tsc -b && node --check server.mjs && node --check kp-site/app.js"
   },
   "engines": {
     "node": ">=18"

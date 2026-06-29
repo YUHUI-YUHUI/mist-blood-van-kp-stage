@@ -35,7 +35,7 @@ export async function createRoom(): Promise<CreateRoomResult> {
 
 /** 读取房间当前快照；房间不存在时抛出错误。 */
 export async function getRoomState(room: string): Promise<RoomSnapshot> {
-  const response = await fetch(`/api/rooms/${room}/state`);
+  const response = await fetch(`/api/rooms/${room}/state`, { cache: "no-store" });
   return parseJson<RoomSnapshot>(response);
 }
 

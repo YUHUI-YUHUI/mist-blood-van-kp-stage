@@ -25,7 +25,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         home: resolve(root, "index.html"),
-        // kp: resolve(root, "kp-site/index.html"),      // 阶段 D：迁移 KP 页时启用
+        kp: resolve(root, "kp-site/index.html"),
         player: resolve(root, "player/index.html"),
       },
     },

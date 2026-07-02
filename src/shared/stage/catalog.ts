@@ -1,4 +1,4 @@
-import type { LocationItem, MaterialItem, NpcItem } from "../types";
+import type { LocationItem, MaterialItem, NpcItem, PlayerSlot } from "../types";
 
 export interface StageLocation extends LocationItem {
   background: string;
@@ -22,11 +22,10 @@ export interface StageMaterial extends MaterialItem {
   role: string;
 }
 
-export interface StagePlayer {
+export interface StagePlayer extends PlayerSlot {
   description: string;
   id: string;
   initial: string;
-  name: string;
   role: string;
 }
 

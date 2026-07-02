@@ -1,10 +1,5 @@
 import type { RoomState } from "@shared/types";
-import {
-  stageLocationById,
-  stageMaterialById,
-  stageNpcById,
-  stagePlayerById,
-} from "./catalog";
+import { resolveRoomMeta, resolveStageLocation, resolveStageMaterial, resolveStageNpc, resolveStagePlayer } from "./content";
 
 interface KpStagePreviewProps {
   state: RoomState;
@@ -20,12 +15,13 @@ function imageSource(
 }
 
 export function KpStagePreview({ state }: KpStagePreviewProps) {
-  const location = stageLocationById[state.locationId] || stageLocationById.campus;
-  const npc = state.npcId ? stageNpcById[state.npcId] : null;
-  const material = state.materialId ? stageMaterialById[state.materialId] : null;
+  const roomMeta = resolveRoomMeta(state);
+  const location = resolveStageLocation(state, state.locationId);
+  const npc = resolveStageNpc(state, state.npcId);
+  const material = resolveStageMaterial(state, state.materialId);
   const players = state.playerIds
-    .map((playerId) => stagePlayerById[playerId])
-    .filter(Boolean);
+    .map((playerId) => resolveStagePlayer(state, playerId))
+    .filter((player): player is NonNullable<typeof player> => Boolean(player));
 
   return (
     <main className="stage" aria-live="polite">
@@ -36,6 +32,13 @@ export function KpStagePreview({ state }: KpStagePreviewProps) {
       />
       <div className="stage-vignette"></div>
       <div className="stage-grain"></div>
+
+      <section className="stage-copy stage-copy-kp" aria-label="公开文案预览">
+        <p className="stage-eyebrow">{roomMeta.title}</p>
+        <h1>{location.name}</h1>
+        {roomMeta.subtitle ? <p className="stage-subtitle">{roomMeta.subtitle}</p> : null}
+        {roomMeta.playerNotice ? <p className="stage-notice">{roomMeta.playerNotice}</p> : null}
+      </section>
 
       <section className="npc-side" aria-label="NPC 出场区">
         <div className="npc-portrait">
@@ -49,6 +52,13 @@ export function KpStagePreview({ state }: KpStagePreviewProps) {
             </div>
           ) : null}
         </div>
+        {npc ? (
+          <div className="stage-floating-card stage-floating-card-left">
+            <span className="role">{npc.role}</span>
+            <h3>{npc.name}</h3>
+            {npc.intro ? <p>{npc.intro}</p> : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="material-layer" aria-label="素材展示区">
@@ -61,6 +71,13 @@ export function KpStagePreview({ state }: KpStagePreviewProps) {
             />
           ) : null}
         </div>
+        {material ? (
+          <div className="stage-material-caption">
+            <span>{material.role}</span>
+            <strong>{material.name}</strong>
+            {material.description ? <p>{material.description}</p> : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="player-side" aria-label="玩家出场区">
@@ -93,6 +110,14 @@ export function KpStagePreview({ state }: KpStagePreviewProps) {
             );
           })}
         </div>
+      </section>
+
+      <section className="stage-location-card" aria-label="场景信息">
+        <div className="stage-location-head">
+          <strong>{location.name}</strong>
+          <span>{location.time}</span>
+        </div>
+        <p>{location.mood}</p>
       </section>
 
       <section className={`notes-panel ${state.notesOpen ? "" : "hidden"}`}>

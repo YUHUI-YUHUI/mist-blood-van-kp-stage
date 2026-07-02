@@ -82,21 +82,33 @@ body {
     min-height: 100svh;
   }
 
+  .stage-copy h1 {
+    font-size: 1.7rem;
+  }
+
+  .stage-copy,
+  .stage-location-card,
+  .stage-material-caption,
+  .stage-floating-card {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+  }
+
   .player-stage .npc-side {
-    top: 64px;
+    top: 180px;
     left: 10px;
     bottom: 18px;
     width: min(64vw, 390px);
   }
 
   .player-stage .material-layer {
-    top: 12vh;
+    top: 22vh;
     bottom: 7vh;
     width: 92vw;
   }
 
   .room-indicator {
-    top: 10px;
+    top: 132px;
     right: 10px;
   }
 }

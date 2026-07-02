@@ -30,8 +30,8 @@ export interface NpcItem {
 export interface MaterialItem {
   id: string;
   name: string;
-  /** 类型标签。 */
-  kind?: string;
+  /** 素材标签。 */
+  role?: string;
   description?: string;
   image?: string;
 }
@@ -46,9 +46,9 @@ export interface PlayerSlot {
 
 /** 房间对默认模板文本的覆盖层。 */
 export interface CustomText {
-  roomMeta?: Partial<RoomMeta>;
-  locations?: Record<string, Partial<LocationItem>>;
-  npcs?: Record<string, Partial<NpcItem>>;
-  materials?: Record<string, Partial<MaterialItem>>;
-  players?: Record<string, Partial<PlayerSlot>>;
+  roomMeta: Partial<RoomMeta>;
+  locations: Record<string, Partial<LocationItem>>;
+  npcs: Record<string, Partial<NpcItem>>;
+  materials: Record<string, Partial<MaterialItem>>;
+  players: Record<string, Partial<PlayerSlot>>;
 }

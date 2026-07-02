@@ -1,7 +1,8 @@
 import { startTransition, useEffect, useRef, useState } from "react";
 import { getRoomState, pushRoomState, uploadRoomAsset } from "@shared/api";
-import type { ImageGroup, RoomState } from "@shared/types";
+import type { CustomText, ImageGroup, RoomMeta, RoomState } from "@shared/types";
 import {
+  createDefaultRoomMeta,
   loadStoredRoomState,
   normalizeRoomState,
   storeRoomState,
@@ -16,6 +17,7 @@ export interface PendingUploadTarget {
 }
 
 type RoomStatusTone = "default" | "error";
+type ContentGroup = Exclude<keyof CustomText, "roomMeta">;
 
 interface KpRoomState {
   roomStatus: string;
@@ -212,8 +214,37 @@ export function useKpRoom(roomCode: string, hostKey: string) {
           playerIds: [],
           notesOpen: false,
           customImages: current.customImages,
+          roomMeta: current.roomMeta,
+          customText: current.customText,
         }),
       );
+    },
+    resetRoomMeta() {
+      const defaults = createDefaultRoomMeta();
+      commitState((current) => ({
+        ...current,
+        roomMeta: defaults,
+        customText: {
+          ...current.customText,
+          roomMeta: {},
+        },
+      }));
+      setStatus("已恢复房间公开文案默认值");
+    },
+    resetTextOverride(group: ContentGroup, id: string) {
+      if (!stateRef.current.customText[group]?.[id]) return;
+      commitState((current) => {
+        const nextGroup = { ...(current.customText[group] as Record<string, unknown>) };
+        delete nextGroup[id];
+        return {
+          ...current,
+          customText: {
+            ...current.customText,
+            [group]: nextGroup,
+          },
+        };
+      });
+      setStatus("已恢复默认文案");
     },
     setLocation(locationId: string) {
       commitState((current) => ({ ...current, locationId }));
@@ -274,6 +305,44 @@ export function useKpRoom(roomCode: string, hostKey: string) {
           ? current.playerIds.filter((id) => id !== playerId)
           : [...current.playerIds, playerId],
       }));
+    },
+    updateRoomMeta(field: keyof RoomMeta, value: string) {
+      commitState((current) => ({
+        ...current,
+        roomMeta: {
+          ...current.roomMeta,
+          [field]: value,
+        },
+        customText: {
+          ...current.customText,
+          roomMeta: {
+            ...current.customText.roomMeta,
+            [field]: value,
+          },
+        },
+      }));
+    },
+    updateTextOverride<
+      TGroup extends ContentGroup,
+      TField extends string,
+    >(group: TGroup, id: string, field: TField, value: string) {
+      commitState((current) => {
+        const currentGroup = current.customText[group] as Record<string, Record<string, string>>;
+        const currentItem = currentGroup[id] || {};
+        return {
+          ...current,
+          customText: {
+            ...current.customText,
+            [group]: {
+              ...currentGroup,
+              [id]: {
+                ...currentItem,
+                [field]: value,
+              },
+            },
+          },
+        };
+      });
     },
   };
 }

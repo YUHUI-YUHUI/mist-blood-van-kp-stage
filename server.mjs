@@ -20,6 +20,24 @@ function emptyCustomImages() {
   };
 }
 
+function defaultRoomMeta() {
+  return {
+    title: "雾中献血车",
+    subtitle: "玩家舞台",
+    playerNotice: "跟随 KP 的舞台变化查看当前场景、人物与公开线索。"
+  };
+}
+
+function emptyCustomText() {
+  return {
+    roomMeta: {},
+    locations: {},
+    npcs: {},
+    materials: {},
+    players: {}
+  };
+}
+
 const defaultState = {
   locationId: "campus",
   npcId: null,
@@ -64,7 +82,12 @@ function makeRoom() {
   const room = {
     code,
     hostKey: randomBytes(18).toString("base64url"),
-    state: { ...defaultState, customImages: emptyCustomImages() },
+    state: {
+      ...defaultState,
+      customImages: emptyCustomImages(),
+      roomMeta: defaultRoomMeta(),
+      customText: emptyCustomText()
+    },
     assets: new Map(),
     revision: 0,
     updatedAt: Date.now(),
@@ -118,6 +141,46 @@ function sanitizeCustomImages(value) {
       }
     });
   });
+  return next;
+}
+
+function sanitizeRoomMeta(value) {
+  const next = defaultRoomMeta();
+  if (!value || typeof value !== "object") return next;
+  if (typeof value.title === "string") next.title = value.title;
+  if (typeof value.subtitle === "string") next.subtitle = value.subtitle;
+  if (typeof value.playerNotice === "string") next.playerNotice = value.playerNotice;
+  return next;
+}
+
+function sanitizePartialRecord(value, allowedKeys) {
+  const next = {};
+  if (!value || typeof value !== "object") return next;
+  allowedKeys.forEach((key) => {
+    if (typeof value[key] === "string") next[key] = value[key];
+  });
+  return next;
+}
+
+function sanitizeContentMap(value, allowedKeys) {
+  const next = {};
+  if (!value || typeof value !== "object") return next;
+  Object.entries(value).forEach(([id, item]) => {
+    if (typeof id !== "string" || !item || typeof item !== "object") return;
+    const sanitized = sanitizePartialRecord(item, allowedKeys);
+    if (Object.keys(sanitized).length > 0) next[id] = sanitized;
+  });
+  return next;
+}
+
+function sanitizeCustomText(value) {
+  const next = emptyCustomText();
+  if (!value || typeof value !== "object") return next;
+  next.roomMeta = sanitizePartialRecord(value.roomMeta, ["title", "subtitle", "playerNotice"]);
+  next.locations = sanitizeContentMap(value.locations, ["name", "time", "mood", "background"]);
+  next.npcs = sanitizeContentMap(value.npcs, ["name", "role", "intro", "portrait"]);
+  next.materials = sanitizeContentMap(value.materials, ["name", "role", "description", "image"]);
+  next.players = sanitizeContentMap(value.players, ["name", "identity", "avatar"]);
   return next;
 }
 
@@ -230,7 +293,9 @@ async function handleApi(request, response, url) {
           materialId: nextState.materialId ? String(nextState.materialId) : null,
           playerIds: Array.isArray(nextState.playerIds) ? nextState.playerIds.map(String).slice(0, 12) : [],
           notesOpen: false,
-          customImages: sanitizeCustomImages(nextState.customImages)
+          customImages: sanitizeCustomImages(nextState.customImages),
+          roomMeta: sanitizeRoomMeta(nextState.roomMeta),
+          customText: sanitizeCustomText(nextState.customText)
         };
         room.revision += 1;
         room.updatedAt = Date.now();

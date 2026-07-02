@@ -1,9 +1,10 @@
 import type { RoomState } from "@shared/types";
 import {
-  publicStageLocationById,
-  publicStageMaterialById,
-  publicStageNpcById,
-} from "./catalog";
+  resolvePublicStageLocation,
+  resolvePublicStageMaterial,
+  resolvePublicStageNpc,
+  resolveRoomMeta,
+} from "./content";
 import type { PlayerConnectionStatus } from "../room/usePlayerRoom";
 
 interface PlayerStageProps {
@@ -28,9 +29,10 @@ export function PlayerStage({
   state,
   status,
 }: PlayerStageProps) {
-  const location = publicStageLocationById[state.locationId] || publicStageLocationById.campus;
-  const npc = state.npcId ? publicStageNpcById[state.npcId] : null;
-  const material = state.materialId ? publicStageMaterialById[state.materialId] : null;
+  const roomMeta = resolveRoomMeta(state);
+  const location = resolvePublicStageLocation(state, state.locationId);
+  const npc = resolvePublicStageNpc(state, state.npcId);
+  const material = resolvePublicStageMaterial(state, state.materialId);
   const connectionClassName =
     status === "connected"
       ? "connection-dot connected"
@@ -48,6 +50,13 @@ export function PlayerStage({
       <div className="stage-vignette"></div>
       <div className="stage-grain"></div>
 
+      <section className="stage-copy" aria-label="公开房间信息">
+        <p className="stage-eyebrow">{roomMeta.title}</p>
+        <h1>{location.name}</h1>
+        {roomMeta.subtitle ? <p className="stage-subtitle">{roomMeta.subtitle}</p> : null}
+        {roomMeta.playerNotice ? <p className="stage-notice">{roomMeta.playerNotice}</p> : null}
+      </section>
+
       <section className="npc-side" aria-label="NPC 出场区">
         <div className="npc-portrait">
           {npc ? (
@@ -60,6 +69,13 @@ export function PlayerStage({
             </div>
           ) : null}
         </div>
+        {npc ? (
+          <div className="stage-floating-card stage-floating-card-left">
+            <span className="role">{npc.role}</span>
+            <h3>{npc.name}</h3>
+            {npc.intro ? <p>{npc.intro}</p> : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="material-layer" aria-label="线索展示区">
@@ -72,6 +88,21 @@ export function PlayerStage({
             />
           ) : null}
         </div>
+        {material ? (
+          <div className="stage-material-caption">
+            <span>{material.role}</span>
+            <strong>{material.name}</strong>
+            {material.description ? <p>{material.description}</p> : null}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="stage-location-card" aria-label="场景公开信息">
+        <div className="stage-location-head">
+          <strong>{location.name}</strong>
+          <span>{location.time}</span>
+        </div>
+        <p>{location.mood}</p>
       </section>
 
       <div className="room-indicator">

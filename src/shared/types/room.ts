@@ -1,6 +1,8 @@
 // 房间运行时状态类型。
 // 与当前 server.mjs 返回的数据结构对齐：publicRoom() 返回 { room, state, revision, updatedAt }。
 
+import type { CustomText, RoomMeta } from "./content";
+
 /** 可上传自定义图片的内容分组，对应 server.mjs 的 IMAGE_GROUPS。 */
 export type ImageGroup = "locations" | "npcs" | "materials" | "players";
 
@@ -18,10 +20,14 @@ export interface StageState {
 }
 
 /**
- * 房间状态。当前与 StageState 一致；后续接入编辑器能力时，
- * 会扩展出房间元信息与自定义文本（见 content.ts）。
+ * 房间状态。
+ * 除了运行时舞台切换外，还包含房间级元信息与文本覆盖层，
+ * 用于承接编辑模式下的公开文案修改。
  */
-export type RoomState = StageState;
+export interface RoomState extends StageState {
+  customText: CustomText;
+  roomMeta: RoomMeta;
+}
 
 /** GET / POST state、SSE 推送返回的房间快照。 */
 export interface RoomSnapshot {

@@ -34,6 +34,10 @@ input {
   font: inherit;
 }
 
+textarea {
+  font: inherit;
+}
+
 button {
   border: 0;
   cursor: pointer;
@@ -44,6 +48,10 @@ button {
   grid-template-columns: 340px minmax(0, 1fr);
   width: 100vw;
   height: 100vh;
+}
+
+.stage-app.is-editing {
+  grid-template-columns: 340px minmax(0, 1fr) 360px;
 }
 
 .control-panel {
@@ -290,6 +298,122 @@ button {
 .mini-btn:hover {
   border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.13);
+}
+
+.editor-panel {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100vh;
+  padding: 18px;
+  overflow-y: auto;
+  background:
+    linear-gradient(180deg, rgba(11, 23, 27, 0.98), rgba(7, 17, 20, 0.96)),
+    radial-gradient(circle at top, rgba(231, 188, 106, 0.08), transparent 32%);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: -14px 0 40px rgba(0, 0, 0, 0.26);
+}
+
+.editor-intro span {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.editor-intro h2 {
+  margin: 8px 0 0;
+  font-size: 28px;
+}
+
+.editor-intro p,
+.editor-empty {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.editor-section,
+.editor-player-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.editor-head,
+.editor-player-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.editor-head h2,
+.editor-player-head strong {
+  margin: 0;
+  font-size: 16px;
+}
+
+.editor-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.editor-field {
+  display: grid;
+  gap: 6px;
+}
+
+.editor-field span {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+}
+
+.editor-field input,
+.editor-field textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.editor-field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.editor-field input:focus,
+.editor-field textarea:focus {
+  outline: 1px solid rgba(231, 188, 106, 0.72);
+  border-color: rgba(231, 188, 106, 0.72);
+}
+
+.editor-reset {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.editor-reset:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
 }
 
 .stage {
@@ -645,7 +769,8 @@ button {
     min-height: 100vh;
   }
 
-  .control-panel {
+  .control-panel,
+  .editor-panel {
     height: auto;
     max-height: none;
   }

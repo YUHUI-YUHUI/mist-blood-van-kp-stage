@@ -6,6 +6,7 @@
 //   GET    /api/rooms/:room/events   (SSE)
 
 import type {
+  CreateRoomOptions,
   CreateRoomResult,
   ImageGroup,
   RoomSnapshot,
@@ -28,8 +29,12 @@ async function parseJson<T>(response: Response): Promise<T> {
 }
 
 /** 创建一个新房间，返回房主密钥与 KP / 玩家入口链接。 */
-export async function createRoom(): Promise<CreateRoomResult> {
-  const response = await fetch("/api/rooms", { method: "POST" });
+export async function createRoom(options: CreateRoomOptions = {}): Promise<CreateRoomResult> {
+  const response = await fetch("/api/rooms", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(options),
+  });
   return parseJson<CreateRoomResult>(response);
 }
 

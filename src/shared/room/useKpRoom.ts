@@ -1,5 +1,6 @@
 import { startTransition, useEffect, useRef, useState } from "react";
 import { getRoomState, pushRoomState, uploadRoomAsset } from "@shared/api";
+import { getRoomTemplate } from "@shared/templates";
 import type { CustomText, ImageGroup, RoomMeta, RoomState } from "@shared/types";
 import {
   createDefaultRoomMeta,
@@ -208,7 +209,8 @@ export function useKpRoom(roomCode: string, hostKey: string) {
     resetStage() {
       commitState((current) =>
         normalizeRoomState({
-          locationId: "campus",
+          templateId: current.templateId,
+          locationId: getRoomTemplate(current.templateId).initialLocationId,
           npcId: null,
           materialId: null,
           playerIds: [],
@@ -220,7 +222,7 @@ export function useKpRoom(roomCode: string, hostKey: string) {
       );
     },
     resetRoomMeta() {
-      const defaults = createDefaultRoomMeta();
+      const defaults = createDefaultRoomMeta(stateRef.current.templateId);
       commitState((current) => ({
         ...current,
         roomMeta: defaults,

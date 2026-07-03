@@ -1,22 +1,24 @@
 import { useState, type FormEvent } from "react";
 import { createRoom, getRoomState } from "@shared/api";
 import { normalizeRoomCode } from "@shared/room/state";
+import { roomTemplateOptions } from "@shared/templates";
+import type { RoomTemplateId } from "@shared/types";
 
 export default function App() {
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creatingTemplate, setCreatingTemplate] = useState<RoomTemplateId | null>(null);
 
-  async function handleCreate() {
-    setCreating(true);
+  async function handleCreate(templateId: RoomTemplateId) {
+    setCreatingTemplate(templateId);
     setMessage("");
     try {
-      const room = await createRoom();
+      const room = await createRoom({ templateId });
       window.location.assign(room.hostUrl);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "房间服务暂时不可用";
       setMessage(`${reason}。请确认已使用 node server.mjs 启动。`);
-      setCreating(false);
+      setCreatingTemplate(null);
     }
   }
 
@@ -65,15 +67,26 @@ export default function App() {
           <h2 id="roomTitle">进入房间</h2>
         </div>
 
-        <button
-          className="primary-action"
-          type="button"
-          onClick={handleCreate}
-          disabled={creating}
-        >
-          <span>{creating ? "正在准备房间…" : "我是 KP，创建新房间"}</span>
-          <span aria-hidden="true">↗</span>
-        </button>
+        <div className="template-actions" aria-label="选择房间模板">
+          {roomTemplateOptions.map((template, index) => {
+            const creating = creatingTemplate === template.id;
+            return (
+              <button
+                key={template.id}
+                className={index === 0 ? "primary-action" : "secondary-action"}
+                type="button"
+                onClick={() => void handleCreate(template.id)}
+                disabled={creatingTemplate !== null}
+              >
+                <span className="action-copy">
+                  <strong>{creating ? "正在准备房间…" : `我是 KP，创建${template.name}`}</strong>
+                  <small>{template.description}</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </button>
+            );
+          })}
+        </div>
 
         <div className="divider">
           <span>或使用房间号加入</span>

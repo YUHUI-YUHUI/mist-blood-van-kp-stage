@@ -1,6 +1,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { readHostKeyFromSearch, readRoomCodeFromSearch } from "@shared/room/state";
 import { useKpRoom } from "@shared/room/useKpRoom";
+import { getRoomTemplate } from "@shared/templates";
 import {
   resolveRoomMeta,
   resolveStageLocation,
@@ -8,12 +9,6 @@ import {
   resolveStageNpc,
   resolveStagePlayer,
 } from "@shared/stage/content";
-import {
-  stageLocations,
-  stageMaterials,
-  stageNpcs,
-  stagePlayers,
-} from "@shared/stage/catalog";
 import { KpStagePreview } from "@shared/stage/KpStagePreview";
 import type { ImageGroup } from "@shared/types";
 
@@ -163,6 +158,7 @@ export default function App() {
   } = useKpRoom(ROOM_CODE, HOST_KEY);
 
   const roomMeta = resolveRoomMeta(state);
+  const template = getRoomTemplate(state.templateId);
   const currentLocation = resolveStageLocation(state, state.locationId);
   const currentNpc = resolveStageNpc(state, state.npcId);
   const currentMaterial = resolveStageMaterial(state, state.materialId);
@@ -222,10 +218,10 @@ export default function App() {
           <section className="selector-group">
             <div className="group-title">
               <span>地点</span>
-              <strong>{stageLocations.length}</strong>
+              <strong>{template.locations.length}</strong>
             </div>
             <div className="selector-list">
-              {stageLocations.map((location) => {
+              {template.locations.map((location) => {
                 const resolved = resolveStageLocation(state, location.id);
                 return (
                   <SelectCard
@@ -254,7 +250,7 @@ export default function App() {
               </button>
             </div>
             <div className="selector-list">
-              {stageNpcs.map((npc) => {
+              {template.npcs.map((npc) => {
                 const resolved = resolveStageNpc(state, npc.id) || npc;
                 return (
                   <SelectCard
@@ -279,14 +275,14 @@ export default function App() {
             <div className="group-title">
               <span>素材</span>
               <div className="title-actions">
-                <strong>{stageMaterials.length}</strong>
+                <strong>{template.materials.length}</strong>
                 <button className="mini-btn" type="button" onClick={clearMaterial}>
                   清空
                 </button>
               </div>
             </div>
             <div className="selector-list">
-              {stageMaterials.map((material) => {
+              {template.materials.map((material) => {
                 const resolved = resolveStageMaterial(state, material.id) || material;
                 return (
                   <SelectCard
@@ -315,7 +311,7 @@ export default function App() {
               </button>
             </div>
             <div className="selector-list">
-              {stagePlayers.map((player) => {
+              {template.players.map((player) => {
                 const resolved = resolveStagePlayer(state, player.id) || player;
                 return (
                   <SelectCard

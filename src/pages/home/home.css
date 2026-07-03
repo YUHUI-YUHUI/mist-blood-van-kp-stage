@@ -102,9 +102,15 @@ body {
   font-weight: 700;
 }
 
+.template-actions {
+  display: grid;
+  gap: 12px;
+}
+
 .primary-action {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   width: 100%;
   padding: 18px 20px;
   border: 1px solid var(--gold);
@@ -116,11 +122,57 @@ body {
     transform 160ms ease,
     background 160ms ease;
 }
+
+.secondary-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.06);
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.action-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.action-copy strong {
+  font-size: 15px;
+}
+
+.action-copy small {
+  color: inherit;
+  opacity: 0.8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .primary-action:hover {
   transform: translateY(-2px);
   background: #e6c17b;
 }
+
+.secondary-action:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .primary-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.secondary-action:disabled {
   cursor: wait;
   opacity: 0.65;
   transform: none;

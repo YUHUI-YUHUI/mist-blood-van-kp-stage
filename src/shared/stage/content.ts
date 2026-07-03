@@ -1,18 +1,7 @@
 import { createDefaultRoomMeta } from "@shared/room/state";
+import { getRoomTemplate } from "@shared/templates";
 import type { RoomMeta, RoomState } from "@shared/types";
-import {
-  publicStageLocationById,
-  publicStageMaterialById,
-  publicStageNpcById,
-  stageLocationById,
-  stageMaterialById,
-  stageNpcById,
-  stagePlayerById,
-  type StageLocation,
-  type StageMaterial,
-  type StageNpc,
-  type StagePlayer,
-} from "./catalog";
+import type { StageLocation, StageMaterial, StageNpc, StagePlayer } from "./catalog";
 
 function mergeItem<T extends object>(
   base: T,
@@ -22,36 +11,38 @@ function mergeItem<T extends object>(
 }
 
 export function resolveRoomMeta(state: RoomState): RoomMeta {
-  return mergeItem(createDefaultRoomMeta(), state.roomMeta);
+  return mergeItem(createDefaultRoomMeta(state.templateId), state.roomMeta);
 }
 
 export function resolveStageLocation(state: RoomState, locationId: string): StageLocation {
-  const fallback = stageLocationById.campus;
-  const base = stageLocationById[locationId] || fallback;
+  const template = getRoomTemplate(state.templateId);
+  const fallback = template.locationById[template.initialLocationId];
+  const base = template.locationById[locationId] || fallback;
   return mergeItem(base, state.customText.locations[base.id] as Partial<StageLocation> | undefined);
 }
 
 export function resolvePublicStageLocation(state: RoomState, locationId: string): StageLocation {
-  const fallback = publicStageLocationById.campus;
-  const base = publicStageLocationById[locationId] || fallback;
+  const template = getRoomTemplate(state.templateId);
+  const fallback = template.locationById[template.initialLocationId];
+  const base = template.locationById[locationId] || fallback;
   return mergeItem(base, state.customText.locations[base.id] as Partial<StageLocation> | undefined);
 }
 
 export function resolveStageNpc(state: RoomState, npcId: string | null): StageNpc | null {
   if (!npcId) return null;
-  const base = stageNpcById[npcId];
+  const base = getRoomTemplate(state.templateId).npcById[npcId];
   return base ? mergeItem(base, state.customText.npcs[npcId] as Partial<StageNpc> | undefined) : null;
 }
 
 export function resolvePublicStageNpc(state: RoomState, npcId: string | null): StageNpc | null {
   if (!npcId) return null;
-  const base = publicStageNpcById[npcId];
+  const base = getRoomTemplate(state.templateId).npcById[npcId];
   return base ? mergeItem(base, state.customText.npcs[npcId] as Partial<StageNpc> | undefined) : null;
 }
 
 export function resolveStageMaterial(state: RoomState, materialId: string | null): StageMaterial | null {
   if (!materialId) return null;
-  const base = stageMaterialById[materialId];
+  const base = getRoomTemplate(state.templateId).materialById[materialId];
   return base
     ? mergeItem(base, state.customText.materials[materialId] as Partial<StageMaterial> | undefined)
     : null;
@@ -62,14 +53,14 @@ export function resolvePublicStageMaterial(
   materialId: string | null,
 ): StageMaterial | null {
   if (!materialId) return null;
-  const base = publicStageMaterialById[materialId];
+  const base = getRoomTemplate(state.templateId).publicMaterialById[materialId];
   return base
     ? mergeItem(base, state.customText.materials[materialId] as Partial<StageMaterial> | undefined)
     : null;
 }
 
 export function resolveStagePlayer(state: RoomState, playerId: string): StagePlayer | null {
-  const base = stagePlayerById[playerId];
+  const base = getRoomTemplate(state.templateId).playerById[playerId];
   if (!base) return null;
   const override = state.customText.players[playerId];
   return {

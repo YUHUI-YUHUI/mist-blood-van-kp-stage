@@ -15,3 +15,8 @@ export type {
   PlayerSlot,
   CustomText,
 } from "./content";
+
+export type {
+  RoomTemplateId,
+  CreateRoomOptions,
+} from "./template";

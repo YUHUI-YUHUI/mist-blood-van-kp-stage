@@ -10,6 +10,26 @@ const rooms = new Map();
 const MAX_STATE_BYTES = 64 * 1024;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_GROUPS = ["locations", "npcs", "materials", "players"];
+const ROOM_TEMPLATE_IDS = ["mist-blood-van", "blank-stage"];
+const DEFAULT_TEMPLATE_ID = "mist-blood-van";
+const TEMPLATE_DEFAULTS = {
+  "mist-blood-van": {
+    initialLocationId: "campus",
+    roomMeta: {
+      title: "雾中献血车",
+      subtitle: "玩家舞台",
+      playerNotice: "跟随 KP 的舞台变化查看当前场景、人物与公开线索。"
+    }
+  },
+  "blank-stage": {
+    initialLocationId: "blank-hall",
+    roomMeta: {
+      title: "空白房间",
+      subtitle: "自定义舞台",
+      playerNotice: "等待 KP 配置当前场景与公开信息。"
+    }
+  }
+};
 
 function emptyCustomImages() {
   return {
@@ -20,12 +40,16 @@ function emptyCustomImages() {
   };
 }
 
-function defaultRoomMeta() {
-  return {
-    title: "雾中献血车",
-    subtitle: "玩家舞台",
-    playerNotice: "跟随 KP 的舞台变化查看当前场景、人物与公开线索。"
-  };
+function isTemplateId(value) {
+  return typeof value === "string" && ROOM_TEMPLATE_IDS.includes(value);
+}
+
+function templateDefaults(templateId = DEFAULT_TEMPLATE_ID) {
+  return TEMPLATE_DEFAULTS[isTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID];
+}
+
+function defaultRoomMeta(templateId = DEFAULT_TEMPLATE_ID) {
+  return { ...templateDefaults(templateId).roomMeta };
 }
 
 function emptyCustomText() {
@@ -76,18 +100,25 @@ function assetId() {
   return randomBytes(12).toString("base64url");
 }
 
-function makeRoom() {
+function createRoomState(templateId = DEFAULT_TEMPLATE_ID) {
+  const template = templateDefaults(templateId);
+  return {
+    ...defaultState,
+    templateId: isTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID,
+    locationId: template.initialLocationId,
+    customImages: emptyCustomImages(),
+    roomMeta: defaultRoomMeta(templateId),
+    customText: emptyCustomText()
+  };
+}
+
+function makeRoom(templateId = DEFAULT_TEMPLATE_ID) {
   let code = roomCode();
   while (rooms.has(code)) code = roomCode();
   const room = {
     code,
     hostKey: randomBytes(18).toString("base64url"),
-    state: {
-      ...defaultState,
-      customImages: emptyCustomImages(),
-      roomMeta: defaultRoomMeta(),
-      customText: emptyCustomText()
-    },
+    state: createRoomState(templateId),
     assets: new Map(),
     revision: 0,
     updatedAt: Date.now(),
@@ -144,8 +175,8 @@ function sanitizeCustomImages(value) {
   return next;
 }
 
-function sanitizeRoomMeta(value) {
-  const next = defaultRoomMeta();
+function sanitizeRoomMeta(value, templateId = DEFAULT_TEMPLATE_ID) {
+  const next = defaultRoomMeta(templateId);
   if (!value || typeof value !== "object") return next;
   if (typeof value.title === "string") next.title = value.title;
   if (typeof value.subtitle === "string") next.subtitle = value.subtitle;
@@ -203,7 +234,8 @@ function matchRoom(pathname, suffix = "") {
 
 async function handleApi(request, response, url) {
   if (request.method === "POST" && url.pathname === "/api/rooms") {
-    const room = makeRoom();
+    const body = await readBody(request).catch(() => ({}));
+    const room = makeRoom(body.templateId);
     sendJson(response, 201, {
       ...publicRoom(room),
       hostKey: room.hostKey,
@@ -287,14 +319,16 @@ async function handleApi(request, response, url) {
           return true;
         }
         const nextState = body.state || {};
+        const template = templateDefaults(room.state.templateId);
         room.state = {
-          locationId: String(nextState.locationId || defaultState.locationId),
+          templateId: room.state.templateId,
+          locationId: String(nextState.locationId || template.initialLocationId),
           npcId: nextState.npcId ? String(nextState.npcId) : null,
           materialId: nextState.materialId ? String(nextState.materialId) : null,
           playerIds: Array.isArray(nextState.playerIds) ? nextState.playerIds.map(String).slice(0, 12) : [],
           notesOpen: false,
           customImages: sanitizeCustomImages(nextState.customImages),
-          roomMeta: sanitizeRoomMeta(nextState.roomMeta),
+          roomMeta: sanitizeRoomMeta(nextState.roomMeta, room.state.templateId),
           customText: sanitizeCustomText(nextState.customText)
         };
         room.revision += 1;

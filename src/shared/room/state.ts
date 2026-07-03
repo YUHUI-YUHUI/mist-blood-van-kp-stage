@@ -1,3 +1,4 @@
+import { DEFAULT_ROOM_TEMPLATE_ID, getRoomTemplate, isRoomTemplateId } from "@shared/templates";
 import type {
   CustomImages,
   CustomText,
@@ -5,6 +6,7 @@ import type {
   MaterialItem,
   NpcItem,
   PlayerSlot,
+  RoomTemplateId,
   RoomMeta,
   RoomState,
 } from "../types";
@@ -21,12 +23,10 @@ export function createEmptyCustomImages(): CustomImages {
   };
 }
 
-export function createDefaultRoomMeta(): RoomMeta {
-  return {
-    title: "雾中献血车",
-    subtitle: "玩家舞台",
-    playerNotice: "跟随 KP 的舞台变化查看当前场景、人物与公开线索。",
-  };
+export function createDefaultRoomMeta(
+  templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+): RoomMeta {
+  return { ...getRoomTemplate(templateId).roomMeta };
 }
 
 export function createEmptyCustomText(): CustomText {
@@ -39,29 +39,53 @@ export function createEmptyCustomText(): CustomText {
   };
 }
 
-export function createDefaultRoomState(): RoomState {
+export function createDefaultRoomState(
+  templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+): RoomState {
+  const template = getRoomTemplate(templateId);
   return {
-    locationId: "campus",
+    templateId: template.id,
+    locationId: template.initialLocationId,
     npcId: null,
     materialId: null,
     playerIds: [],
     notesOpen: false,
     customImages: createEmptyCustomImages(),
-    roomMeta: createDefaultRoomMeta(),
+    roomMeta: createDefaultRoomMeta(template.id),
     customText: createEmptyCustomText(),
   };
 }
 
 export function normalizeRoomState(value: unknown): RoomState {
   const source = value && typeof value === "object" ? (value as Partial<RoomState>) : {};
+  const templateId = isRoomTemplateId(source.templateId)
+    ? source.templateId
+    : DEFAULT_ROOM_TEMPLATE_ID;
+  const template = getRoomTemplate(templateId);
+  const templatePlayerIds = new Set(template.players.map((player) => player.id));
   return {
-    ...createDefaultRoomState(),
+    ...createDefaultRoomState(template.id),
     ...source,
-    playerIds: Array.isArray(source.playerIds) ? source.playerIds.map(String).slice(0, 12) : [],
+    templateId: template.id,
+    locationId:
+      typeof source.locationId === "string" && source.locationId in template.locationById
+        ? source.locationId
+        : template.initialLocationId,
+    npcId:
+      typeof source.npcId === "string" && source.npcId in template.npcById
+        ? source.npcId
+        : null,
+    materialId:
+      typeof source.materialId === "string" && source.materialId in template.materialById
+        ? source.materialId
+        : null,
+    playerIds: Array.isArray(source.playerIds)
+      ? source.playerIds.map(String).filter((id) => templatePlayerIds.has(id)).slice(0, 12)
+      : [],
     notesOpen: Boolean(source.notesOpen),
     customImages: normalizeCustomImages(source.customImages),
-    roomMeta: normalizeRoomMeta(source.roomMeta),
-    customText: normalizeCustomText(source.customText),
+    roomMeta: normalizeRoomMeta(source.roomMeta, template.id),
+    customText: normalizeCustomText(source.customText, template),
   };
 }
 
@@ -113,8 +137,11 @@ function normalizeCustomImages(value: unknown): CustomImages {
   return next;
 }
 
-function normalizeRoomMeta(value: unknown): RoomMeta {
-  const next = createDefaultRoomMeta();
+function normalizeRoomMeta(
+  value: unknown,
+  templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+): RoomMeta {
+  const next = createDefaultRoomMeta(templateId);
   if (!value || typeof value !== "object") return next;
   const source = value as Partial<RoomMeta>;
   if (typeof source.title === "string") next.title = source.title;
@@ -123,41 +150,47 @@ function normalizeRoomMeta(value: unknown): RoomMeta {
   return next;
 }
 
-function normalizeCustomText(value: unknown): CustomText {
+function normalizeCustomText(
+  value: unknown,
+  template: ReturnType<typeof getRoomTemplate>,
+): CustomText {
   const next = createEmptyCustomText();
   if (!value || typeof value !== "object") return next;
   const source = value as Partial<CustomText>;
   next.roomMeta = normalizePartialRecord(source.roomMeta, ["title", "subtitle", "playerNotice"]);
-  next.locations = normalizeContentMap<LocationItem>(source.locations, [
-    "name",
-    "time",
-    "mood",
-    "background",
-  ]);
-  next.npcs = normalizeContentMap<NpcItem>(source.npcs, [
-    "name",
-    "role",
-    "intro",
-    "portrait",
-  ]);
-  next.materials = normalizeContentMap<MaterialItem>(source.materials, [
-    "name",
-    "role",
-    "description",
-    "image",
-  ]);
-  next.players = normalizeContentMap<PlayerSlot>(source.players, ["name", "identity", "avatar"]);
+  next.locations = normalizeContentMap<LocationItem>(
+    source.locations,
+    ["name", "time", "mood", "background"],
+    Object.keys(template.locationById),
+  );
+  next.npcs = normalizeContentMap<NpcItem>(
+    source.npcs,
+    ["name", "role", "intro", "portrait"],
+    Object.keys(template.npcById),
+  );
+  next.materials = normalizeContentMap<MaterialItem>(
+    source.materials,
+    ["name", "role", "description", "image"],
+    Object.keys(template.materialById),
+  );
+  next.players = normalizeContentMap<PlayerSlot>(
+    source.players,
+    ["name", "identity", "avatar"],
+    Object.keys(template.playerById),
+  );
   return next;
 }
 
 function normalizeContentMap<T extends object>(
   value: unknown,
   allowedKeys: string[],
+  allowedIds: string[],
 ): Record<string, Partial<T>> {
   const next: Record<string, Partial<T>> = {};
   if (!value || typeof value !== "object") return next;
+  const allowedIdSet = new Set(allowedIds);
   Object.entries(value as Record<string, unknown>).forEach(([id, item]) => {
-    if (typeof id !== "string" || !item || typeof item !== "object") return;
+    if (typeof id !== "string" || !allowedIdSet.has(id) || !item || typeof item !== "object") return;
     const normalized = normalizePartialRecord(item, allowedKeys) as Partial<T>;
     if (Object.keys(normalized).length > 0) next[id] = normalized;
   });

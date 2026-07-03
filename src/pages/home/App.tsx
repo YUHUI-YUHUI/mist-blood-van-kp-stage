@@ -1,13 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { createRoom, getRoomState } from "@shared/api";
 import { normalizeRoomCode } from "@shared/room/state";
-import { roomTemplateOptions } from "@shared/templates";
+import { CUSTOM_ROOM_TEMPLATE_ID, parseTemplateFile, roomTemplateOptions } from "@shared/templates";
 import type { RoomTemplateId } from "@shared/types";
 
 export default function App() {
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("");
+  const [importLabel, setImportLabel] = useState("从模板文件创建");
   const [creatingTemplate, setCreatingTemplate] = useState<RoomTemplateId | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function handleCreate(templateId: RoomTemplateId) {
     setCreatingTemplate(templateId);
@@ -34,6 +36,26 @@ export default function App() {
       window.location.assign(`/player/?room=${code}`);
     } catch {
       setMessage("没有找到这个房间，请向 KP 确认房间号");
+    }
+  }
+
+  async function handleTemplateImport(file: File) {
+    setCreatingTemplate(CUSTOM_ROOM_TEMPLATE_ID);
+    setImportLabel("正在导入模板…");
+    setMessage("");
+    try {
+      const text = await file.text();
+      const templateData = parseTemplateFile(text);
+      const room = await createRoom({
+        templateId: CUSTOM_ROOM_TEMPLATE_ID,
+        templateData,
+      });
+      window.location.assign(room.hostUrl);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "模板文件导入失败";
+      setMessage(reason);
+      setCreatingTemplate(null);
+      setImportLabel("从模板文件创建");
     }
   }
 
@@ -86,6 +108,18 @@ export default function App() {
               </button>
             );
           })}
+          <button
+            className="secondary-action"
+            type="button"
+            disabled={creatingTemplate !== null}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <span className="action-copy">
+              <strong>{creatingTemplate === CUSTOM_ROOM_TEMPLATE_ID ? importLabel : "从模板文件创建"}</strong>
+              <small>导入之前从 KP 导出的 `.template.json` 文件，直接创建新房间。</small>
+            </span>
+            <span aria-hidden="true">↗</span>
+          </button>
         </div>
 
         <div className="divider">
@@ -120,6 +154,17 @@ export default function App() {
           玩家端不会显示 KP 控制栏、备注或房主密钥。
         </p>
       </section>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json,.template.json,application/json"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void handleTemplateImport(file);
+        }}
+      />
     </main>
   );
 }

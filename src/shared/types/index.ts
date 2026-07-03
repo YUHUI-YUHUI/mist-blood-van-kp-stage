@@ -17,6 +17,14 @@ export type {
 } from "./content";
 
 export type {
-  RoomTemplateId,
+  BuiltinRoomTemplateId,
   CreateRoomOptions,
+  RoomTemplateId,
+  RoomTemplateDefinition,
+  RoomTemplateFile,
+  RoomTemplateInitialStage,
+  RoomTemplateLocation,
+  RoomTemplateMaterial,
+  RoomTemplateNpc,
+  RoomTemplatePlayer,
 } from "./template";

@@ -1,4 +1,10 @@
-import { DEFAULT_ROOM_TEMPLATE_ID, getRoomTemplate, isRoomTemplateId } from "@shared/templates";
+import {
+  CUSTOM_ROOM_TEMPLATE_ID,
+  DEFAULT_ROOM_TEMPLATE_ID,
+  getRoomTemplate,
+  isBuiltinRoomTemplateId,
+  sanitizeRoomTemplateDefinition,
+} from "@shared/templates";
 import type {
   CustomImages,
   CustomText,
@@ -6,6 +12,7 @@ import type {
   MaterialItem,
   NpcItem,
   PlayerSlot,
+  RoomTemplateDefinition,
   RoomTemplateId,
   RoomMeta,
   RoomState,
@@ -25,8 +32,9 @@ export function createEmptyCustomImages(): CustomImages {
 
 export function createDefaultRoomMeta(
   templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+  templateData: RoomTemplateDefinition | null = null,
 ): RoomMeta {
-  return { ...getRoomTemplate(templateId).roomMeta };
+  return { ...getRoomTemplate(templateId, templateData).roomMeta };
 }
 
 export function createEmptyCustomText(): CustomText {
@@ -41,50 +49,57 @@ export function createEmptyCustomText(): CustomText {
 
 export function createDefaultRoomState(
   templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+  templateData: RoomTemplateDefinition | null = null,
 ): RoomState {
-  const template = getRoomTemplate(templateId);
+  const template = getRoomTemplate(templateId, templateData);
   return {
     templateId: template.id,
-    locationId: template.initialLocationId,
-    npcId: null,
-    materialId: null,
-    playerIds: [],
+    templateData: template.id === CUSTOM_ROOM_TEMPLATE_ID ? templateData : null,
+    locationId: template.initialStage.locationId,
+    npcId: template.initialStage.npcId,
+    materialId: template.initialStage.materialId,
+    playerIds: template.initialStage.playerIds,
     notesOpen: false,
     customImages: createEmptyCustomImages(),
-    roomMeta: createDefaultRoomMeta(template.id),
+    roomMeta: createDefaultRoomMeta(template.id, templateData),
     customText: createEmptyCustomText(),
   };
 }
 
 export function normalizeRoomState(value: unknown): RoomState {
   const source = value && typeof value === "object" ? (value as Partial<RoomState>) : {};
-  const templateId = isRoomTemplateId(source.templateId)
-    ? source.templateId
-    : DEFAULT_ROOM_TEMPLATE_ID;
-  const template = getRoomTemplate(templateId);
+  const templateData = sanitizeRoomTemplateDefinition(source.templateData);
+  const templateId =
+    templateData
+      ? CUSTOM_ROOM_TEMPLATE_ID
+      : isBuiltinRoomTemplateId(source.templateId)
+        ? source.templateId
+        : DEFAULT_ROOM_TEMPLATE_ID;
+  const template = getRoomTemplate(templateId, templateData);
   const templatePlayerIds = new Set(template.players.map((player) => player.id));
   return {
-    ...createDefaultRoomState(template.id),
+    ...createDefaultRoomState(template.id, templateData),
     ...source,
     templateId: template.id,
+    templateData,
     locationId:
       typeof source.locationId === "string" && source.locationId in template.locationById
         ? source.locationId
-        : template.initialLocationId,
+        : template.initialStage.locationId,
     npcId:
       typeof source.npcId === "string" && source.npcId in template.npcById
         ? source.npcId
-        : null,
+        : template.initialStage.npcId,
     materialId:
       typeof source.materialId === "string" && source.materialId in template.materialById
         ? source.materialId
-        : null,
+        : template.initialStage.materialId,
     playerIds: Array.isArray(source.playerIds)
       ? source.playerIds.map(String).filter((id) => templatePlayerIds.has(id)).slice(0, 12)
-      : [],
+      : template.initialStage.playerIds,
     notesOpen: Boolean(source.notesOpen),
     customImages: normalizeCustomImages(source.customImages),
-    roomMeta: normalizeRoomMeta(source.roomMeta, template.id),
+    roomMeta: normalizeRoomMeta(source.roomMeta, template.id, templateData),
     customText: normalizeCustomText(source.customText, template),
   };
 }
@@ -140,8 +155,9 @@ function normalizeCustomImages(value: unknown): CustomImages {
 function normalizeRoomMeta(
   value: unknown,
   templateId: RoomTemplateId = DEFAULT_ROOM_TEMPLATE_ID,
+  templateData: RoomTemplateDefinition | null = null,
 ): RoomMeta {
-  const next = createDefaultRoomMeta(templateId);
+  const next = createDefaultRoomMeta(templateId, templateData);
   if (!value || typeof value !== "object") return next;
   const source = value as Partial<RoomMeta>;
   if (typeof source.title === "string") next.title = source.title;

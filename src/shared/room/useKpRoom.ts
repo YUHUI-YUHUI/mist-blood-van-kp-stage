@@ -1,6 +1,13 @@
 import { startTransition, useEffect, useRef, useState } from "react";
 import { getRoomState, pushRoomState, uploadRoomAsset } from "@shared/api";
-import { getRoomTemplate } from "@shared/templates";
+import { createTemplateFile, getRoomTemplateFromState } from "@shared/templates";
+import {
+  resolveRoomMeta,
+  resolveStageLocation,
+  resolveStageMaterial,
+  resolveStageNpc,
+  resolveStagePlayer,
+} from "@shared/stage/content";
 import type { CustomText, ImageGroup, RoomMeta, RoomState } from "@shared/types";
 import {
   createDefaultRoomMeta,
@@ -207,13 +214,15 @@ export function useKpRoom(roomCode: string, hostKey: string) {
       setStatus("已恢复默认图片");
     },
     resetStage() {
+      const initialStage = getRoomTemplateFromState(stateRef.current).initialStage;
       commitState((current) =>
         normalizeRoomState({
           templateId: current.templateId,
-          locationId: getRoomTemplate(current.templateId).initialLocationId,
-          npcId: null,
-          materialId: null,
-          playerIds: [],
+          templateData: current.templateData,
+          locationId: initialStage.locationId,
+          npcId: initialStage.npcId,
+          materialId: initialStage.materialId,
+          playerIds: initialStage.playerIds,
           notesOpen: false,
           customImages: current.customImages,
           roomMeta: current.roomMeta,
@@ -222,7 +231,10 @@ export function useKpRoom(roomCode: string, hostKey: string) {
       );
     },
     resetRoomMeta() {
-      const defaults = createDefaultRoomMeta(stateRef.current.templateId);
+      const defaults = createDefaultRoomMeta(
+        stateRef.current.templateId,
+        stateRef.current.templateData,
+      );
       commitState((current) => ({
         ...current,
         roomMeta: defaults,
@@ -345,6 +357,28 @@ export function useKpRoom(roomCode: string, hostKey: string) {
           },
         };
       });
+    },
+    exportTemplateFile() {
+      const currentState = stateRef.current;
+      const template = getRoomTemplateFromState(currentState);
+      const roomMeta = resolveRoomMeta(currentState);
+      const templateDefinition = {
+        name: roomMeta.title,
+        description: `${roomMeta.subtitle || "玩家舞台"} · 从房间导出`,
+        roomMeta,
+        initialStage: {
+          locationId: currentState.locationId,
+          npcId: currentState.npcId,
+          materialId: currentState.materialId,
+          playerIds: currentState.playerIds,
+        },
+        locations: template.locations.map((location) => resolveStageLocation(currentState, location.id)),
+        npcs: template.npcs.map((npc) => resolveStageNpc(currentState, npc.id) || npc),
+        materials: template.materials.map((material) => resolveStageMaterial(currentState, material.id) || material),
+        publicMaterialIds: template.publicMaterialIds,
+        players: template.players.map((player) => resolveStagePlayer(currentState, player.id) || player),
+      };
+      return createTemplateFile(templateDefinition);
     },
   };
 }

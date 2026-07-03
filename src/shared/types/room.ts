@@ -2,7 +2,7 @@
 // 与当前 server.mjs 返回的数据结构对齐：publicRoom() 返回 { room, state, revision, updatedAt }。
 
 import type { CustomText, RoomMeta } from "./content";
-import type { RoomTemplateId } from "./template";
+import type { RoomTemplateDefinition, RoomTemplateId } from "./template";
 
 /** 可上传自定义图片的内容分组，对应 server.mjs 的 IMAGE_GROUPS。 */
 export type ImageGroup = "locations" | "npcs" | "materials" | "players";
@@ -27,6 +27,7 @@ export interface StageState {
  */
 export interface RoomState extends StageState {
   customText: CustomText;
+  templateData: RoomTemplateDefinition | null;
   roomMeta: RoomMeta;
   templateId: RoomTemplateId;
 }

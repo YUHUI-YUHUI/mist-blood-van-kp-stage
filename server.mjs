@@ -10,11 +10,17 @@ const rooms = new Map();
 const MAX_STATE_BYTES = 64 * 1024;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_GROUPS = ["locations", "npcs", "materials", "players"];
-const ROOM_TEMPLATE_IDS = ["mist-blood-van", "blank-stage"];
+const ROOM_TEMPLATE_IDS = ["mist-blood-van", "blank-stage", "custom-template"];
 const DEFAULT_TEMPLATE_ID = "mist-blood-van";
+const CUSTOM_TEMPLATE_ID = "custom-template";
 const TEMPLATE_DEFAULTS = {
   "mist-blood-van": {
-    initialLocationId: "campus",
+    initialStage: {
+      locationId: "campus",
+      npcId: null,
+      materialId: null,
+      playerIds: []
+    },
     roomMeta: {
       title: "雾中献血车",
       subtitle: "玩家舞台",
@@ -22,7 +28,12 @@ const TEMPLATE_DEFAULTS = {
     }
   },
   "blank-stage": {
-    initialLocationId: "blank-hall",
+    initialStage: {
+      locationId: "blank-hall",
+      npcId: null,
+      materialId: null,
+      playerIds: []
+    },
     roomMeta: {
       title: "空白房间",
       subtitle: "自定义舞台",
@@ -44,8 +55,12 @@ function isTemplateId(value) {
   return typeof value === "string" && ROOM_TEMPLATE_IDS.includes(value);
 }
 
+function isBuiltinTemplateId(value) {
+  return value === "mist-blood-van" || value === "blank-stage";
+}
+
 function templateDefaults(templateId = DEFAULT_TEMPLATE_ID) {
-  return TEMPLATE_DEFAULTS[isTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID];
+  return TEMPLATE_DEFAULTS[isBuiltinTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID];
 }
 
 function defaultRoomMeta(templateId = DEFAULT_TEMPLATE_ID) {
@@ -100,25 +115,30 @@ function assetId() {
   return randomBytes(12).toString("base64url");
 }
 
-function createRoomState(templateId = DEFAULT_TEMPLATE_ID) {
-  const template = templateDefaults(templateId);
+function createRoomState(templateId = DEFAULT_TEMPLATE_ID, templateData = null) {
+  const activeTemplateId = templateData ? CUSTOM_TEMPLATE_ID : isBuiltinTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID;
+  const template = templateData || templateDefaults(activeTemplateId);
   return {
     ...defaultState,
-    templateId: isTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE_ID,
-    locationId: template.initialLocationId,
+    templateId: activeTemplateId,
+    templateData,
+    locationId: template.initialStage.locationId,
+    npcId: template.initialStage.npcId,
+    materialId: template.initialStage.materialId,
+    playerIds: template.initialStage.playerIds,
     customImages: emptyCustomImages(),
-    roomMeta: defaultRoomMeta(templateId),
+    roomMeta: templateData ? { ...templateData.roomMeta } : defaultRoomMeta(activeTemplateId),
     customText: emptyCustomText()
   };
 }
 
-function makeRoom(templateId = DEFAULT_TEMPLATE_ID) {
+function makeRoom(templateId = DEFAULT_TEMPLATE_ID, templateData = null) {
   let code = roomCode();
   while (rooms.has(code)) code = roomCode();
   const room = {
     code,
     hostKey: randomBytes(18).toString("base64url"),
-    state: createRoomState(templateId),
+    state: createRoomState(templateId, templateData),
     assets: new Map(),
     revision: 0,
     updatedAt: Date.now(),
@@ -215,6 +235,158 @@ function sanitizeCustomText(value) {
   return next;
 }
 
+function sanitizeString(value, fallback) {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function sanitizeIdentifier(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  return normalized || fallback;
+}
+
+function sanitizeTemplateLocations(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => sanitizeTemplateLocation(item, index))
+    .filter(Boolean);
+}
+
+function sanitizeTemplateLocation(value, index) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    id: sanitizeIdentifier(value.id, `location-${index + 1}`),
+    name: sanitizeString(value.name, `场景 ${index + 1}`),
+    time: typeof value.time === "string" ? value.time : "",
+    mood: typeof value.mood === "string" ? value.mood : "",
+    background: typeof value.background === "string" ? value.background : "/assets/locations/oxford-campus-bg.png",
+    goal: typeof value.goal === "string" ? value.goal : "",
+    read: typeof value.read === "string" ? value.read : "",
+    beats: Array.isArray(value.beats) ? value.beats.filter((item) => typeof item === "string").slice(0, 12) : []
+  };
+}
+
+function sanitizeTemplateNpcs(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => sanitizeTemplateNpc(item, index))
+    .filter(Boolean);
+}
+
+function sanitizeTemplateNpc(value, index) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    id: sanitizeIdentifier(value.id, `npc-${index + 1}`),
+    initial: typeof value.initial === "string" ? value.initial : String(index + 1),
+    intro: typeof value.intro === "string" ? value.intro : "",
+    name: sanitizeString(value.name, `NPC ${index + 1}`),
+    note: typeof value.note === "string" ? value.note : "",
+    portrait: typeof value.portrait === "string" ? value.portrait : "",
+    role: typeof value.role === "string" ? value.role : ""
+  };
+}
+
+function sanitizeTemplateMaterials(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => sanitizeTemplateMaterial(item, index))
+    .filter(Boolean);
+}
+
+function sanitizeTemplateMaterial(value, index) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    id: sanitizeIdentifier(value.id, `material-${index + 1}`),
+    description: typeof value.description === "string" ? value.description : "",
+    image: typeof value.image === "string" ? value.image : "",
+    name: sanitizeString(value.name, `素材 ${index + 1}`),
+    note: typeof value.note === "string" ? value.note : "",
+    role: typeof value.role === "string" ? value.role : ""
+  };
+}
+
+function sanitizeTemplatePlayers(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => sanitizeTemplatePlayer(item, index))
+    .filter(Boolean);
+}
+
+function sanitizeTemplatePlayer(value, index) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    id: sanitizeIdentifier(value.id, `player-${index + 1}`),
+    avatar: typeof value.avatar === "string" ? value.avatar : "",
+    description: typeof value.description === "string" ? value.description : "",
+    initial: typeof value.initial === "string" ? value.initial : String(index + 1),
+    name: sanitizeString(value.name, `席位 ${index + 1}`),
+    role: typeof value.role === "string" ? value.role : "玩家席位"
+  };
+}
+
+function sanitizeTemplateRoomMeta(value, fallbackName) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    title: sanitizeString(source.title, fallbackName),
+    subtitle: typeof source.subtitle === "string" ? source.subtitle : "玩家舞台",
+    playerNotice: typeof source.playerNotice === "string" ? source.playerNotice : "跟随 KP 的舞台变化查看当前场景、人物与公开线索。"
+  };
+}
+
+function sanitizePublicMaterialIds(value, materialIds) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string" && materialIds.has(item)).slice(0, 48);
+}
+
+function sanitizeInitialStage(value, context) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    locationId: typeof source.locationId === "string" && context.locationIds.has(source.locationId)
+      ? source.locationId
+      : context.fallbackLocationId,
+    npcId: typeof source.npcId === "string" && context.npcIds.has(source.npcId) ? source.npcId : null,
+    materialId: typeof source.materialId === "string" && context.materialIds.has(source.materialId)
+      ? source.materialId
+      : null,
+    playerIds: Array.isArray(source.playerIds)
+      ? source.playerIds.filter((item) => typeof item === "string" && context.playerIds.has(item)).slice(0, 12)
+      : []
+  };
+}
+
+function sanitizeTemplateData(value) {
+  if (!value || typeof value !== "object") return null;
+  const locations = sanitizeTemplateLocations(value.locations);
+  const npcs = sanitizeTemplateNpcs(value.npcs);
+  const materials = sanitizeTemplateMaterials(value.materials);
+  const players = sanitizeTemplatePlayers(value.players);
+  if (locations.length === 0) return null;
+
+  const locationIds = new Set(locations.map((item) => item.id));
+  const npcIds = new Set(npcs.map((item) => item.id));
+  const materialIds = new Set(materials.map((item) => item.id));
+  const playerIds = new Set(players.map((item) => item.id));
+  const name = sanitizeString(value.name, "导入模板");
+
+  return {
+    name,
+    description: sanitizeString(value.description, "从模板文件导入的房间模板。"),
+    roomMeta: sanitizeTemplateRoomMeta(value.roomMeta, name),
+    initialStage: sanitizeInitialStage(value.initialStage, {
+      fallbackLocationId: locations[0].id,
+      locationIds,
+      npcIds,
+      materialIds,
+      playerIds
+    }),
+    locations,
+    npcs,
+    materials,
+    publicMaterialIds: sanitizePublicMaterialIds(value.publicMaterialIds, materialIds),
+    players
+  };
+}
+
 function parseImageDataUrl(value) {
   if (typeof value !== "string") throw new Error("缺少图片数据");
   const match = value.match(/^data:(image\/[a-z0-9.+-]+);base64,([a-z0-9+/=\s]+)$/i);
@@ -235,7 +407,8 @@ function matchRoom(pathname, suffix = "") {
 async function handleApi(request, response, url) {
   if (request.method === "POST" && url.pathname === "/api/rooms") {
     const body = await readBody(request).catch(() => ({}));
-    const room = makeRoom(body.templateId);
+    const templateData = sanitizeTemplateData(body.templateData);
+    const room = makeRoom(templateData ? CUSTOM_TEMPLATE_ID : body.templateId, templateData);
     sendJson(response, 201, {
       ...publicRoom(room),
       hostKey: room.hostKey,
@@ -319,16 +492,37 @@ async function handleApi(request, response, url) {
           return true;
         }
         const nextState = body.state || {};
-        const template = templateDefaults(room.state.templateId);
+        const template = room.state.templateData || templateDefaults(room.state.templateId);
+        const locationIds = new Set(template.locations.map((item) => item.id));
+        const npcIds = new Set(template.npcs.map((item) => item.id));
+        const materialIds = new Set(template.materials.map((item) => item.id));
+        const playerIds = new Set(template.players.map((item) => item.id));
         room.state = {
           templateId: room.state.templateId,
-          locationId: String(nextState.locationId || template.initialLocationId),
-          npcId: nextState.npcId ? String(nextState.npcId) : null,
-          materialId: nextState.materialId ? String(nextState.materialId) : null,
-          playerIds: Array.isArray(nextState.playerIds) ? nextState.playerIds.map(String).slice(0, 12) : [],
+          templateData: room.state.templateData,
+          locationId:
+            typeof nextState.locationId === "string" && locationIds.has(nextState.locationId)
+              ? nextState.locationId
+              : template.initialStage.locationId,
+          npcId:
+            typeof nextState.npcId === "string" && npcIds.has(nextState.npcId)
+              ? nextState.npcId
+              : template.initialStage.npcId,
+          materialId:
+            typeof nextState.materialId === "string" && materialIds.has(nextState.materialId)
+              ? nextState.materialId
+              : template.initialStage.materialId,
+          playerIds: Array.isArray(nextState.playerIds)
+            ? nextState.playerIds
+                .map(String)
+                .filter((id) => playerIds.has(id))
+                .slice(0, 12)
+            : template.initialStage.playerIds,
           notesOpen: false,
           customImages: sanitizeCustomImages(nextState.customImages),
-          roomMeta: sanitizeRoomMeta(nextState.roomMeta, room.state.templateId),
+          roomMeta: room.state.templateData
+            ? sanitizeTemplateRoomMeta(nextState.roomMeta, room.state.templateData.roomMeta.title)
+            : sanitizeRoomMeta(nextState.roomMeta, room.state.templateId),
           customText: sanitizeCustomText(nextState.customText)
         };
         room.revision += 1;

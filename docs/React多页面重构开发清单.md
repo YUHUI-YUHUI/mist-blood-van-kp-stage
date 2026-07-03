@@ -330,10 +330,10 @@
 
 ### 批次 1
 
-- [ ] 建立 Vite + React + TypeScript 底座
-- [ ] 初始化多入口
-- [ ] 初始化 `shared/types` 与 `shared/api`
-- [ ] 迁移首页到 React
+- [x] 建立 Vite + React + TypeScript 底座
+- [x] 初始化多入口
+- [x] 初始化 `shared/types` 与 `shared/api`
+- [x] 迁移首页到 React
 
 原因：
 

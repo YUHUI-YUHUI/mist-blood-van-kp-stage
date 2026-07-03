@@ -1,7 +1,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { readHostKeyFromSearch, readRoomCodeFromSearch } from "@shared/room/state";
 import { useKpRoom } from "@shared/room/useKpRoom";
-import { getRoomTemplate } from "@shared/templates";
+import { getRoomTemplateFromState } from "@shared/templates";
 import {
   resolveRoomMeta,
   resolveStageLocation,
@@ -130,9 +130,11 @@ function EmptyEditorHint({ text }: { text: string }) {
 
 export default function App() {
   const [copyLabel, setCopyLabel] = useState("复制玩家链接");
+  const [exportLabel, setExportLabel] = useState("导出模板文件");
   const [editMode, setEditMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const copyResetTimerRef = useRef<number | null>(null);
+  const exportResetTimerRef = useRef<number | null>(null);
   const {
     beginUpload,
     clearMaterial,
@@ -155,10 +157,11 @@ export default function App() {
     togglePlayer,
     updateRoomMeta,
     updateTextOverride,
+    exportTemplateFile,
   } = useKpRoom(ROOM_CODE, HOST_KEY);
 
   const roomMeta = resolveRoomMeta(state);
-  const template = getRoomTemplate(state.templateId);
+  const template = getRoomTemplateFromState(state);
   const currentLocation = resolveStageLocation(state, state.locationId);
   const currentNpc = resolveStageNpc(state, state.npcId);
   const currentMaterial = resolveStageMaterial(state, state.materialId);
@@ -185,6 +188,25 @@ export default function App() {
     } catch {
       window.prompt("复制下面的玩家链接", playerUrl);
     }
+  }
+
+  function handleExportTemplate() {
+    const templateFile = exportTemplateFile();
+    const blob = new Blob([JSON.stringify(templateFile, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${roomMeta.title || "room-template"}.template.json`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    if (exportResetTimerRef.current !== null) window.clearTimeout(exportResetTimerRef.current);
+    setExportLabel("已导出模板");
+    exportResetTimerRef.current = window.setTimeout(() => {
+      setExportLabel("导出模板文件");
+      exportResetTimerRef.current = null;
+    }, 1800);
   }
 
   return (
@@ -334,10 +356,13 @@ export default function App() {
 
           <footer className="panel-tools">
             <p className="panel-tip">
-              每张地点、NPC、素材和玩家卡都可以上传替换图；编辑模式下修改的公开文案会实时同步到玩家端。
+              每张地点、NPC、素材和玩家卡都可以上传替换图；编辑模式下修改的公开文案会实时同步到玩家端。导出模板文件时不会打包房间内临时上传的图片。
             </p>
             <button className="panel-btn" type="button" onClick={() => setEditMode((current) => !current)}>
               {editMode ? "回到演出模式" : "切到编辑模式"}
+            </button>
+            <button className="panel-btn" type="button" onClick={handleExportTemplate}>
+              {exportLabel}
             </button>
             <button className="panel-btn" type="button" onClick={toggleNotes}>
               {state.notesOpen ? "隐藏 KP 备注" : "显示 KP 备注"}
